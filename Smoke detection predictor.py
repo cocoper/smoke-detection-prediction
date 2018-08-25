@@ -7,7 +7,5 @@ import os
 def LoadModel(model,**kwg):  # load model
     pass
 
-class smkdet(object):
+class detector(object):
     pass
-
-dfa fdaf fdafd
