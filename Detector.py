@@ -1,5 +1,8 @@
 # -*- coding:utf-8  -*-
 
+import numpy as np
+
+
 class Detector(object):
     def __init__(self, regr,
                 detctor_pos=(0, 0, 0), 
@@ -26,7 +29,7 @@ class Detector(object):
     def get_threshold(self):
         return self.threshold
 
-    def alarm(self,source_postition):
+    def alarm(self,source_pos):
         pass
         
 class Groups(object):

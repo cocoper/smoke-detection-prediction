@@ -16,6 +16,9 @@ class CargoBay(object):
         
         return tuple(self.width,self.length,self.height)
 
-    def isinbay(location):  #location: list-like data
+    def isinbay(pos):  #pos: list-like data
         
-        return 
+        isinwidth = pos[0] < self.width
+        isinlength = pos[1] < self.length
+
+        return isinlength & isinwidth
