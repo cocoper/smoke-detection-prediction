@@ -1,16 +1,33 @@
-class detector(object):
-    def __init__(self, detctor_position=(0, 0, 0), thershold=None, SD_id = 1):
-        self.position = detctor_position
-        self.thershold = thershold
-        self.ID = SD_id 
+# -*- coding:utf-8  -*-
 
-    def set_position(self,pos):
-        self.position = pos
+class Detector(object):
+    def __init__(self, regr,
+                detctor_pos=(0, 0, 0), 
+                threshold = None, 
+                SD_id = 1,
+                group_id = 1
+                ):
 
-    def set_thershold(self, thershold):
-        self.thershold = thershold
+        self.pos = detctor_pos
+        self.threshold = threshold
+        self.ID = SD_id
+        self.group_id = group_id
+        self.regr = regr
+
+    def set_pos(self,pos):
+        self.pos = pos
+
+    def get_pos(self):
+        return self.pos
+
+    def set_threshold(self, threshold):
+        self.threshold = threshold
+        
+    def get_threshold(self):
+        return self.threshold
 
     def alarm(self,source_postition):
         pass
         
-
+class Groups(object):
+    pass
