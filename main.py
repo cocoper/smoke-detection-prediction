@@ -1,14 +1,13 @@
 # -*- coding:utf-8  -*-
 
-import numpy as np
-import pandas as pd
 import os
 import pickle
 from Detector import Detector
 from cargobay import CargoBay
+from sys_gui import gui
 from Environment import Environment
-
-SD_NUM = 10
+from time import time
+SD_NUM = 6
 TIME_CRI = 60  # in seconds
 
 
@@ -35,10 +34,13 @@ def main():
     Env1 = Environment(cargobay_obj=FWD_cargobay,
                        detector_series=dets, detector_qty=SD_NUM)
     Env1.arrange(fwd_space=100, aft_space=100)
-    # Env1.set_source(3000, 2000)
-    Env1.run()
-    Env1.output()
-
+    t1 = time()
+    Env1.run(mode = 'all')
+    t2 = time()
+    print('Time used:{:.2f} seconds'.format(t2-t1))
+    # Env1.output()
 
 if __name__ == "__main__":
-    main()
+    gui = gui()
+    gui.run()
+    # main()
