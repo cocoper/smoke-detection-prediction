@@ -25,7 +25,6 @@ class gui(object):
         self.playtime = 0.0
         self.font = pygame.font.SysFont('mono', 20, bold=True)
 
-
     def run(self):
         """The mainloop
         """
@@ -48,11 +47,11 @@ class gui(object):
 
         pygame.quit()
 
-
     def draw_text(self, text):
         """Center text in window
         """
-        fw, fh = self.font.size(text) # fw: font width,  fh: font height
+        fw, fh = self.font.size(text)  # fw: font width,  fh: font height
         surface = self.font.render(text, True, (0, 255, 0))
         # // makes integer division in python3
-        self.screen.blit(surface, ((self.width - fw) // 2, (self.height - fh) // 2))
+        self.screen.blit(surface, ((self.width - fw) //
+                                   2, (self.height - fh) // 2))

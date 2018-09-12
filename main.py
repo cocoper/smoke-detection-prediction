@@ -4,7 +4,7 @@ import os
 import pickle
 from Detector import Detector
 from cargobay import CargoBay
-from sys_gui import gui
+from mygui import gui
 from Environment import Environment
 from time import time
 SD_NUM = 6
@@ -41,6 +41,7 @@ def main():
     # Env1.output()
 
 if __name__ == "__main__":
-    gui = gui()
-    gui.run()
-    # main()
+    # gui = gui()
+    # gui.run()
+    # # main()
+    gui
