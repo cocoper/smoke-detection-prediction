@@ -135,12 +135,15 @@ class Environment(object):
         if mode == 'singal':
             for sd in self.detectors:
                 sd.alarm(self.smoke_src_pos)
-            self.output(mode)
+            return self.det_logic(self.CHA_SD,self.CHB_SD, mode = 'AND')
+            
+            # self.output(mode)
+            
         if mode == 'all':
             results = []  # 所有试验的结果
             fail_test_No = []  # 记录失败试验的编号
-            rec_src_pos_x = []  # 记录烟雾x位置
-            rec_src_pos_y = []  # 记录烟雾y位置
+            rec_src_x = []  # 记录烟雾x位置
+            rec_src_y = []  # 记录烟雾y位置
 
             g_src_pos = self.movesrc(1000, 500, self.smoke_src_pos)
             test_num = 0  # 试验编号
@@ -148,8 +151,8 @@ class Environment(object):
                 try:
                     test_num += 1
                     x_src_pos, y_src_pos = next(g_src_pos)
-                    rec_src_pos_x.append(x_src_pos)
-                    rec_src_pos_y.append(y_src_pos)
+                    rec_src_x.append(x_src_pos)
+                    rec_src_y.append(y_src_pos)
                     self.set_source(x_src_pos, y_src_pos)
                     for sd in self.detectors:
                         sd.alarm(self.smoke_src_pos)
@@ -163,16 +166,15 @@ class Environment(object):
                     break
             self.res = pd.DataFrame(
                 data={'alarm': results,
-                      'smoke_x': rec_src_pos_x,
-                      'smoke_y': rec_src_pos_y
+                      'smoke_x': rec_src_x,
+                      'smoke_y': rec_src_y
                       }
             )
             print(self.res)
             print('{:d} failed tests'.format(results.count(False)))
 
     def det_logic(self, signal_CHA, signal_CHB, mode='AND'):
-        assert len(signal_CHA) == len(
-            signal_CHB), 'A and B channel signal should be same length'
+        assert len(signal_CHA) == len(signal_CHB), 'A and B channel signal should be same length'
         if mode == 'AND':
             return (True in self.alarm2binary(self.crit, signal_CHA))\
                 & (True in self.alarm2binary(self.crit, signal_CHB))
