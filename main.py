@@ -36,7 +36,7 @@ def main():
                        detector_series=dets, detector_qty=SD_NUM)
     Env1.arrange(fwd_space=100, aft_space=100)
     # Env1.set_source(3000, 2000)
-    Env1.run()
+    Env1.run(mode = 'all')
     Env1.output()
 
 
