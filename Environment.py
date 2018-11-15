@@ -116,8 +116,8 @@ class Environment(object):
 
     def movesrc(self, step_x, step_y, initial_pos=(0, 0, 0)):
         index = 0
-       assert step_x >0, 'Step in length should be greater than zero'
-       assert step_y >0, 'Step in width should be greater than zero'
+        assert step_x >0, 'Step in length should be greater than zero'
+        assert step_y >0, 'Step in width should be greater than zero'
         x_src_pos = initial_pos[0]
         y_src_pos = initial_pos[1]
         while x_src_pos <= self.cargobay.length: #先在width方向上移动，再在length方向上移动
@@ -126,13 +126,13 @@ class Environment(object):
                 yield x_src_pos,y_src_pos #创建一个迭代器来返回每次的值
                 if y_src_pos + step_y > self.cargobay.width: #如果超出货舱尺寸范围，则取货舱边缘
                     y_src_pos = self.cargobay.width
-                    else:
-                        y_src_pos += step_y
+                else:
+                    y_src_pos += step_y
                 index +=1
             if x_src_pos +step_x >self.cargobay.length:# 如果超出货舱尺寸范围，则取货舱边缘
                 x_src_pos =self.cargobay.length
-                else:
-                    x_src_pos += step_x
+            else:
+                x_src_pos += step_x
         return 'Source moving finished'
 
                 
