@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
-import pandas as pd
+from Detector import Detector
 
 
 class Environment(object):
-    def __init__(self, cargobay_obj, detector_series, detector_qty, time_criteria=60, *args, **kwargs):
+    def __init__(self, cargobay_obj, detector_series, detector_qty, time_criteria=60):
         self.detectors = detector_series  # 创建探测器组
         # self.detectors =[]
         self.det_qty = detector_qty
@@ -13,10 +13,6 @@ class Environment(object):
         self.SD_dim = self.detectors[0].get_dimension()
         self.smoke_src_pos = (0, 0, 0)
         self.crit = time_criteria
-        self.res = pd.DataFrame(data={'alarm': []
-
-                                      }
-                                )
 
         self.__set_detector_id()  # 顺序设置探测器Id
         self.__set_channel_id()  # 设置AB通道的探测器
@@ -61,19 +57,8 @@ class Environment(object):
             for sd in self.CHB_SD:
                 sd.set_pos(X_group[i], Y_group[1], self.cargobay.height)
                 i += 1
-        if arrange_method == 'side':
-            X_group, Y_group = self.__side_arrange(
-                self.det_qty, fwd_space, aft_space, displace=100)  # 计算各组的坐标
-            y = Y_group[0]
-            for sd in self.detectors:
-                for x in X_group:
-                    sd.set_pos(x, y, self.cargobay.height)
-                    if y == Y_group[0]:
-                        y = Y_group[1]
-                    else:
-                        y = Y_group[0]
 
-    def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):  # 中心排布方案
+    def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):
         '''
         SD_NUM: 烟雾探测器数量
         fwd_space:第一个探测器与前壁板的距离
@@ -88,42 +73,13 @@ class Environment(object):
         # X_group.append(fwd_space + self.SD_dim[0]/2)
         X_group[0] = fwd_space + self.SD_dim[0]/2
         gap = (self.cargobay.length - (fwd_space+aft_space)
-               - self.SD_dim[0]*group_NUM)/(group_NUM-1)
+                    - self.SD_dim[0]*group_NUM)/(group_NUM-1)
         # x1 = x0 + gap + self.SD_dim[0]
-        first_sd_x = X_group[0]
+        tmp = X_group[0]
         for i in range(1, group_NUM-1):
 
-            X_group[i] = first_sd_x + gap + self.SD_dim[0]/2
-            first_sd_x = X_group[i]
-        X_group[-1] = (self.cargobay.length - aft_space - self.SD_dim[0]/2)
-
-        Y_group[0] = self.cargobay.width/2 + displace + self.SD_dim[1]/2
-        Y_group[1] = self.cargobay.width/2 - displace - self.SD_dim[1]/2
-
-        return X_group, Y_group
-
-    def __side_arrange(self, SD_NUM, fwd_space, aft_space, displace=50):  # 间隔排布方案
-        '''
-        SD_NUM: 烟雾探测器数量
-        fwd_space:第一个探测器与前壁板的距离
-        aft_space:最后一个探测器与后壁版距离
-        displace:烟雾探测器与中线的偏移
-        '''
-        assert SD_NUM % 2 == 0, 'The qty of detector should be even'
-        # group_NUM = int(SD_NUM/2)
-        X_group = list(range(SD_NUM))
-        Y_group = list(range(2))
-
-        # X_group.append(fwd_space + self.SD_dim[0]/2)
-        X_group[0] = fwd_space + self.SD_dim[0]/2
-        gap = (self.cargobay.length - (fwd_space+aft_space)
-               - self.SD_dim[0]*SD_NUM)/(SD_NUM-1)
-        # x1 = x0 + gap + self.SD_dim[0]
-        first_sd_x = X_group[0]
-        for i in range(1, SD_NUM-1):
-
-            X_group[i] = first_sd_x + gap + self.SD_dim[0]/2
-            first_sd_x = X_group[i]
+            X_group[i] = tmp + gap + self.SD_dim[0]/2
+            tmp = X_group[i]
         X_group[-1] = (self.cargobay.length - aft_space - self.SD_dim[0]/2)
 
         Y_group[0] = self.cargobay.width/2 + displace + self.SD_dim[1]/2
@@ -147,20 +103,18 @@ class Environment(object):
 
             g_src_pos = self.movesrc(1000, 500, self.smoke_src_pos)
             test_num = 0  # 试验编号
+            self.output()
+        if mode == 'all':
+            g_src_pos = self.movesrc(300, 300, self.smoke_src_pos)
             while True:
                 try:
-                    test_num += 1
                     x_src_pos, y_src_pos = next(g_src_pos)
                     rec_src_x.append(x_src_pos)
                     rec_src_y.append(y_src_pos)
                     self.set_source(x_src_pos, y_src_pos)
                     for sd in self.detectors:
                         sd.alarm(self.smoke_src_pos)
-                    res = self.output(mode)
-                    results.append(res)  # 添加本次试验结果
-                    if res == False:
-                        fail_test_No.append(test_num)
-
+                    self.output()
                 except StopIteration as e:
                     print(e.value)
                     break
@@ -184,46 +138,36 @@ class Environment(object):
 
     def movesrc(self, step_x, step_y, initial_pos=(0, 0, 0)):
         index = 0
-        assert step_x > 0, 'Step in length should be greater than zero'
-        assert step_y > 0, 'Step in width should be greater than zero'
+        assert step_x >0, 'Step in length should be greater than zero'
+        assert step_y >0, 'Step in width should be greater than zero'
         x_src_pos = initial_pos[0]
         y_src_pos = initial_pos[1]
-        while x_src_pos < self.cargobay.length:  # 先在width方向上移动，再在length方向上移动
-            while y_src_pos < self.cargobay.width:
+        while x_src_pos <= self.cargobay.length: #先在width方向上移动，再在length方向上移动
+            while y_src_pos <= self.cargobay.width:
                 # self.set_source(x_src_pos,y_src_pos)
-                yield x_src_pos, y_src_pos  # 创建一个迭代器来返回每次的值
-                if y_src_pos + step_y > self.cargobay.width:  # 如果超出货舱尺寸范围，则取货舱边缘
+                yield x_src_pos,y_src_pos #创建一个迭代器来返回每次的值
+                if y_src_pos + step_y > self.cargobay.width: #如果超出货舱尺寸范围，则取货舱边缘
                     y_src_pos = self.cargobay.width
+                    else:
+                        y_src_pos += step_y
+                index +=1
+            if x_src_pos +step_x >self.cargobay.length:# 如果超出货舱尺寸范围，则取货舱边缘
+                x_src_pos =self.cargobay.length
                 else:
-                    y_src_pos += step_y
-                index += 1
-                print(
-                    'this is No.{:d} test,source location {:.2f}  {:.2f}'.format(index, x_src_pos, y_src_pos))
-            y_src_pos = 0  # new loop in next length step, reset width
-
-            if x_src_pos + step_x > self.cargobay.length:  # 如果超出货舱尺寸范围，则取货舱边缘
-                x_src_pos = self.cargobay.length
-            else:
-                x_src_pos += step_x
+                    x_src_pos += step_x
         return 'Source moving finished'
 
-    def alarm2binary(self, crit, det_series):
-        alarm_bin = [True if sd.alarm_time[0] <=
-                     crit else False for sd in det_series]
-        # print(alarm_bin)
+    def alarm2binary(self, crit,det_series):
+        alarm_bin = [True if sd.alarm_time[0]<=crit else False for sd in det_series]
+        print(alarm_bin)
         return alarm_bin
 
-    def output(self, mode='singal'):
+        
+
+    def output(self):
         for sd in self.detectors:
             print('The No.{:d} CH{:d} Smoke Detecotor is at {:.2f},{:.2f},{:.2f}, distance is {:.2f} alarm time is {:f}'
-                  .format(sd.SD_id, sd.channel_id, sd.x_pos, sd.y_pos, sd.z_pos, sd.dis, sd.alarm_time[0]))
-        # self.alarm2binary(self.crit, self.CHA_SD)
-        # self.alarm2binary(self.crit, self.CHB_SD)
-        print(self.det_logic(self.CHA_SD, self.CHB_SD))
-        if mode == 'all':
-            if self.det_logic(self.CHA_SD, self.CHB_SD):
-                return True
-            else:
-                return False
-        else:
-            pass
+                    .format(sd.SD_id,sd.channel_id,sd.x_pos,sd.y_pos,sd.z_pos,sd.dis,sd.alarm_time[0]))
+        self.alarm2binary(self.crit,self.CHA_SD)
+        self.alarm2binary(self.crit,self.CHB_SD)
+        print(self.det_logic(self.CHA_SD,self.CHB_SD))
