@@ -118,13 +118,13 @@ class Environment(object):
                 except StopIteration as e:
                     print(e.value)
                     break
-            self.res = pd.DataFrame(
-                data={'alarm': results,
-                      'smoke_x': rec_src_x,
-                      'smoke_y': rec_src_y
-                      }
-            )
-            print(self.res)
+            # self.res = pd.DataFrame(
+            #     data={'alarm': results,
+            #           'smoke_x': rec_src_x,
+            #           'smoke_y': rec_src_y
+            #           }
+            # )
+            # print(self.res)
             print('{:d} failed tests'.format(results.count(False)))
 
     def det_logic(self, signal_CHA, signal_CHB, mode='AND'):
@@ -148,13 +148,13 @@ class Environment(object):
                 yield x_src_pos,y_src_pos #创建一个迭代器来返回每次的值
                 if y_src_pos + step_y > self.cargobay.width: #如果超出货舱尺寸范围，则取货舱边缘
                     y_src_pos = self.cargobay.width
-                    else:
-                        y_src_pos += step_y
+                else:
+                    y_src_pos += step_y
                 index +=1
             if x_src_pos +step_x >self.cargobay.length:# 如果超出货舱尺寸范围，则取货舱边缘
                 x_src_pos =self.cargobay.length
-                else:
-                    x_src_pos += step_x
+            else:
+                x_src_pos += step_x
         return 'Source moving finished'
 
     def alarm2binary(self, crit,det_series):
