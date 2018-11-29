@@ -23,7 +23,7 @@ class CargoBay(object):
     
     def get_dimension(self):
         
-        return tuple(self.__width,self.__length,self.__height)
+        return tuple([self.__width,self.__length,self.__height])
 
     def isinbay(self,pos):  #判断提供的pos是否在货舱内
     
@@ -33,9 +33,4 @@ class CargoBay(object):
         isinlength = pos[0] < self.__length
 
         return isinlength & isinwidth
-
-    
-
-
-        
 

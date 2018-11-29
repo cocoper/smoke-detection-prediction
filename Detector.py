@@ -11,7 +11,8 @@ class Detector(object):
                  dimension=(140, 145),
                  SD_id=1,
                  channel_id=1,
-                 sd_char=None
+                 sd_char=None,
+                 name = 'SD'
                  ):
 
         self.x_pos = x_pos
@@ -19,9 +20,11 @@ class Detector(object):
         self.z_pos = z_pos
         self.dimension = dimension
         self.SD_id = SD_id
+        self.name = name
         self.channel_id = channel_id
         self.pred = predictor
         self.alarm_time = 0
+        self.store_alarm_time = []
         self.dis = 0
         self.failure = False # False = operative True = failure
         if sd_char == None:
@@ -67,6 +70,7 @@ class Detector(object):
             pos1=(self.x_pos, self.y_pos, self.z_pos), pos2=src_pos)
         self.dis = dis
         self.alarm_time = self.pred.predict(dis/10)
+        self.store_alarm_time.append(self.alarm_time)
 
     def __cal_distance(self, pos1, pos2):
 
