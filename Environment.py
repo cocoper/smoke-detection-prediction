@@ -2,6 +2,7 @@
 from Detector import Detector
 import csv
 
+
 class Environment(object):
     def __init__(self, cargobay_obj, detector_series, detector_qty, time_criteria=60):
         self.detectors = detector_series  # 创建探测器组
@@ -13,25 +14,24 @@ class Environment(object):
         self.SD_dim = self.detectors[0].get_dimension()
         self.smoke_src_pos = (0, 0, 0)
         self.crit = time_criteria
+        self.log = {} #每次试验的记录
         dim = self.cargobay.get_dimension()
-        self.bay_dim = {'width':dim[0],
-                        'length':dim[1],
-                        'height':dim[2]
+        self.bay_dim = {'width': dim[0],
+                        'length': dim[1],
+                        'height': dim[2]
                         }
-        # self.test_res = []
-        self.test = {'No.':0,
-                     'Smoke Location':(0,0,0),
-                     'Detector Location':(0,0,0),
-                     'Alarm':False,
-                     'Resp time':0}
-        #创建记录header
-        self.log_header = ['No.', 'Source Location']
-        
-        for i in range(1, self.det_qty+1):
-            self.log_header.append('SD'+str(i))
-        self.log_header.extend(['Alarm'])
-#TODO 用test字典来记录每一次试验数据
-#TODO 用test_res存储所有记录
+        self.test = {'No.': 0,
+                     'Smoke Location': (0, 0, 0),
+                     'Detector Location': (0, 0, 0),
+                     'Alarm': False,
+                     'Resp time': 0}
+        # 初始化每次试验的log字典
+        self.log['No.'] = 0
+        self.log['Src Loc.'] = 0
+        for sd in self.detectors:
+            self.log[sd.name] = 0
+        self.log['Alarm'] = 0
+
         self.__set_detector_id()  # 顺序设置探测器Id
         self.__set_channel_id()  # 设置AB通道的探测器
 
@@ -91,7 +91,7 @@ class Environment(object):
         # X_group.append(fwd_space + self.SD_dim[0]/2)
         X_group[0] = fwd_space + self.SD_dim[0]/2
         gap = (self.bay_dim['length'] - (fwd_space+aft_space)
-                    - self.SD_dim[0]*group_NUM)/(group_NUM-1)
+               - self.SD_dim[0]*group_NUM)/(group_NUM-1)
         # x1 = x0 + gap + self.SD_dim[0]
         tmp = X_group[0]
         for i in range(1, group_NUM-1):
@@ -109,42 +109,46 @@ class Environment(object):
         if mode == 'singal':
             for sd in self.detectors:
                 sd.alarm(self.smoke_src_pos)
-            return self.det_logic(self.CHA_SD,self.CHB_SD, mode = 'AND')
-            
+            return self.det_logic(self.CHA_SD, self.CHB_SD, mode='AND')
+
             # self.output(mode)
-            
+
         if mode == 'all':
             results = []  # 所有试验的结果
             fail_test_No = []  # 记录失败试验的编号
             rec_src_x = []  # 记录烟雾x位置
             rec_src_y = []  # 记录烟雾y位置
             test_num = 0  # 试验编号
-            g_src_pos = self.movesrc(300, 300, self.smoke_src_pos)
-            # logfile = open('test result.csv','w',encoding='utf-8')
-            test_res={} #单次试验数据
+            g_src_pos = self.movesrc(1000, 1000, self.smoke_src_pos)
+            logfile = open('test_result.csv', 'w', encoding='utf-8')
+            logger = csv.DictWriter(logfile,self.log.keys(),delimiter = ',')
+            logger.writeheader()
             while True:
                 try:
                     test_num += 1
-                    test_res[self.log_header[0]] = test_num
+                    self.log['No.'] = test_num
                     x_src_pos, y_src_pos = next(g_src_pos)
                     rec_src_x.append(x_src_pos)
                     rec_src_y.append(y_src_pos)
                     self.set_source(x_src_pos, y_src_pos)
-                    test_res[self.log_header[1]] = (x_src_pos,y_src_pos,self.smoke_src_pos[2])
+                    self.log['Src Loc.'] = (
+                        x_src_pos, y_src_pos, self.smoke_src_pos[2])
 
                     for sd in self.detectors:
-                        sd.alarm(self.smoke_src_pos) #得到每个烟雾探测器的告警时间并存入对象内
-                        test_res[sd.name] = sd.alarm_time
+                        sd.alarm(self.smoke_src_pos)  # 得到每个烟雾探测器的告警时间并存入对象内
+                        self.log[sd.name] = sd.alarm_time[0]
                     self.output()
-                    alarm_res = self.det_logic(self.CHA_SD,self.CHB_SD, mode = 'AND')
-                    test_res['Alarm'] = alarm_res
-                    print(test_res)
-                #TODO 输出日志文件
-                #TODO 创建一个单次的试验结果（字典型），传入test_log函数保存，该结果需要和header对应起来
+                    alarm_res = self.det_logic(
+                        self.CHA_SD, self.CHB_SD, mode='AND')
+                    self.log['Alarm'] = alarm_res
+                    print(self.log)
+                    # self.write_test_log(test_res,logfile)
+                    logger.writerow(self.log)
+                    
                 except StopIteration as e:
                     print(e.value)
                     break
-                # logfile.close()
+            logfile.close()
             # self.res = pd.DataFrame(
             #     data={'alarm': results,
             #           'smoke_x': rec_src_x,
@@ -155,7 +159,8 @@ class Environment(object):
             # print('{:d} failed tests'.format(results.count(False)))
 
     def det_logic(self, signal_CHA, signal_CHB, mode='AND'):
-        assert len(signal_CHA) == len(signal_CHB), 'A and B channel signal should be same length'
+        assert len(signal_CHA) == len(
+            signal_CHB), 'A and B channel signal should be same length'
         if mode == 'AND':
             return (True in self.alarm2binary(self.crit, signal_CHA))\
                 & (True in self.alarm2binary(self.crit, signal_CHB))
@@ -165,47 +170,44 @@ class Environment(object):
 
     def movesrc(self, step_x, step_y, initial_pos=(0, 0, 0)):
         index = 0
-        assert step_x >0, 'Step in length should be greater than zero'
-        assert step_y >0, 'Step in width should be greater than zero'
+        assert step_x > 0, 'Step in length should be greater than zero'
+        assert step_y > 0, 'Step in width should be greater than zero'
         x_src_pos = initial_pos[0]
-        y_src_pos = initial_pos[1]
-        while x_src_pos <= self.bay_dim['length']: #先在width方向上移动，再在length方向上移动
-            while y_src_pos <= self.bay_dim['width']:
+        # 先在width方向上移动，再在length方向上移动
+        while x_src_pos < self.bay_dim['length']:
+            y_src_pos = initial_pos[1]
+            while y_src_pos < self.bay_dim['width']:
                 # self.set_source(x_src_pos,y_src_pos)
-                yield x_src_pos,y_src_pos #创建一个迭代器来返回每次的值
-                if y_src_pos + step_y > self.bay_dim['width']: #如果超出货舱尺寸范围，则取货舱边缘
+                yield x_src_pos, y_src_pos  # 创建一个迭代器来返回每次的值
+                # 如果超出货舱尺寸范围，则取货舱边缘
+                if y_src_pos + step_y > self.bay_dim['width']:
                     y_src_pos = self.bay_dim['width']
                 else:
                     y_src_pos += step_y
-                index +=1
-            if x_src_pos +step_x >self.bay_dim['length']:# 如果超出货舱尺寸范围，则取货舱边缘
-                x_src_pos =self.bay_dim['length']
+                index += 1
+            # 如果超出货舱尺寸范围，则取货舱边缘
+            if x_src_pos + step_x > self.bay_dim['length']:
+                x_src_pos = self.bay_dim['length']
             else:
                 x_src_pos += step_x
         return 'Source moving finished'
 
-    def alarm2binary(self, crit,det_series):  #返回整个烟雾探测器的告警与否序列
-        alarm_bin = [True if sd.alarm_time[0]<=crit else False for sd in det_series]
+    def alarm2binary(self, crit, det_series):  # 返回整个烟雾探测器的告警与否序列
+        alarm_bin = [True if sd.alarm_time[0] <=
+                     crit else False for sd in det_series]
         # print(alarm_bin)
         return alarm_bin
-
-        
 
     def output(self):
         for sd in self.detectors:
             print('The No.{:d} CH{:d} Smoke Detecotor is at {:.2f},{:.2f},{:.2f}, distance is {:.2f} alarm time is {:f}'
-                    .format(sd.SD_id,sd.channel_id,sd.x_pos,sd.y_pos,sd.z_pos,sd.dis,sd.alarm_time[0]))
+                  .format(sd.SD_id, sd.channel_id, sd.x_pos, sd.y_pos, sd.z_pos, sd.dis, sd.alarm_time[0]))
         # self.alarm2binary(self.crit,self.CHA_SD)
         # self.alarm2binary(self.crit,self.CHB_SD)
         # print(self.det_logic(self.CHA_SD,self.CHB_SD))
-    def write_test_log(self, test_res, filename='results.csv',**kwargs):
 
-        
-        with open(filename,'w', encoding='utf-8',newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, list(test_res.keys()), dialect=',')
-            writer.writeheader()
-
-
-
-
-
+    # def write_test_log(self, test_res, logfile, **kwargs):
+    #     writer = csv.DictWriter(logfile, list(
+    #         test_res.keys()), delimiter=',')
+    #     writer.writeheader()
+    #     writer.writerow(test_res)
