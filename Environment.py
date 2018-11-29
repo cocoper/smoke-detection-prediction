@@ -124,6 +124,7 @@ class Environment(object):
             logger = csv.DictWriter(logfile,self.log.keys(),delimiter = ',')
             logger.writeheader()
             while True:
+                #ttestest
                 try:
                     test_num += 1
                     self.log['No.'] = test_num
