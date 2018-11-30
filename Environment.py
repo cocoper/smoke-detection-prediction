@@ -114,26 +114,24 @@ class Environment(object):
             # self.output(mode)
 
         if mode == 'all':
-            results = []  # 所有试验的结果
-            fail_test_No = []  # 记录失败试验的编号
+            failed_test = []  # 记录失败试验的编号
             rec_src_x = []  # 记录烟雾x位置
             rec_src_y = []  # 记录烟雾y位置
             test_num = 0  # 试验编号
             g_src_pos = self.movesrc(1000, 1000, self.smoke_src_pos)
-            logfile = open('test_result.csv', 'w', encoding='utf-8')
+            logfile = open('test_result.csv', 'w', newline ='', encoding='utf-8')
             logger = csv.DictWriter(logfile,self.log.keys(),delimiter = ',')
             logger.writeheader()
             while True:
-                #ttestest
                 try:
                     test_num += 1
                     self.log['No.'] = test_num
-                    x_src_pos, y_src_pos = next(g_src_pos)
-                    rec_src_x.append(x_src_pos)
-                    rec_src_y.append(y_src_pos)
-                    self.set_source(x_src_pos, y_src_pos)
+                    src_x, src_y = next(g_src_pos)
+                    rec_src_x.append(src_x)
+                    rec_src_y.append(src_y)
+                    self.set_source(src_x, src_y)
                     self.log['Src Loc.'] = (
-                        x_src_pos, y_src_pos, self.smoke_src_pos[2])
+                        src_x, src_y, self.smoke_src_pos[2])
 
                     for sd in self.detectors:
                         sd.alarm(self.smoke_src_pos)  # 得到每个烟雾探测器的告警时间并存入对象内
@@ -142,6 +140,8 @@ class Environment(object):
                     alarm_res = self.det_logic(
                         self.CHA_SD, self.CHB_SD, mode='AND')
                     self.log['Alarm'] = alarm_res
+                    if not alarm_res:
+                        failed_test.append(test_num)
                     print(self.log)
                     # self.write_test_log(test_res,logfile)
                     logger.writerow(self.log)
@@ -150,6 +150,7 @@ class Environment(object):
                     print(e.value)
                     break
             logfile.close()
+            print(failed_test)
             # self.res = pd.DataFrame(
             #     data={'alarm': results,
             #           'smoke_x': rec_src_x,
@@ -173,25 +174,25 @@ class Environment(object):
         index = 0
         assert step_x > 0, 'Step in length should be greater than zero'
         assert step_y > 0, 'Step in width should be greater than zero'
-        x_src_pos = initial_pos[0]
+        src_x = initial_pos[0]
         # 先在width方向上移动，再在length方向上移动
-        while x_src_pos < self.bay_dim['length']:
-            y_src_pos = initial_pos[1]
-            while y_src_pos < self.bay_dim['width']:
-                # self.set_source(x_src_pos,y_src_pos)
-                yield x_src_pos, y_src_pos  # 创建一个迭代器来返回每次的值
+        while src_x < self.bay_dim['length']:
+            src_y = initial_pos[1]
+            while src_y < self.bay_dim['width']:
+                # self.set_source(src_x,src_y)
+                yield src_x, src_y  # 创建一个迭代器来返回每次的值
                 # 如果超出货舱尺寸范围，则取货舱边缘
-                if y_src_pos + step_y > self.bay_dim['width']:
-                    y_src_pos = self.bay_dim['width']
+                if src_y + step_y > self.bay_dim['width']:
+                    src_y = self.bay_dim['width']
                 else:
-                    y_src_pos += step_y
+                    src_y += step_y
                 index += 1
             # 如果超出货舱尺寸范围，则取货舱边缘
-            if x_src_pos + step_x > self.bay_dim['length']:
-                x_src_pos = self.bay_dim['length']
+            if src_x + step_x > self.bay_dim['length']:
+                src_x = self.bay_dim['length']
             else:
-                x_src_pos += step_x
-        return 'Source moving finished'
+                src_x += step_x
+        return 'Smoke Source moving finished'
 
     def alarm2binary(self, crit, det_series):  # 返回整个烟雾探测器的告警与否序列
         alarm_bin = [True if sd.alarm_time[0] <=
@@ -212,3 +213,6 @@ class Environment(object):
     #         test_res.keys()), delimiter=',')
     #     writer.writeheader()
     #     writer.writerow(test_res)
+
+    def print_results(self):
+        pass
