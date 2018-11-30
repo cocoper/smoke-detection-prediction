@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from Detector import Detector
 import csv
+import pandas as pd
 
 
 class Environment(object):
@@ -214,5 +215,4 @@ class Environment(object):
     #     writer.writeheader()
     #     writer.writerow(test_res)
 
-    def print_results(self):
-        pass
+
