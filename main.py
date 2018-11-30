@@ -31,7 +31,7 @@ def main():
 
     predictor = load_model(os.getcwd()+'\\rf_model_all.model')
     FWD_cargobay = CargoBay(width=4166, length=16184, height=1727.6)
-    dets = [Detector(predictor,name='SD'+str(i)) for i in range(SD_NUM)]
+    dets = [Detector(predictor,name='SD'+str(i+1)) for i in range(SD_NUM)]
     Env1 = Environment(cargobay_obj=FWD_cargobay,
                        detector_series=dets, detector_qty=SD_NUM)
     Env1.arrange(fwd_space=100, aft_space=100)
