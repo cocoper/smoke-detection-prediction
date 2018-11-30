@@ -11,6 +11,7 @@ class Detector(object):
                 dimension = (140, 145),
                 threshold = None, 
                 SD_id = 1,
+                name = 'SD',
                 channel_id = 1
                 ):
 
@@ -20,6 +21,7 @@ class Detector(object):
         self.dimension = dimension
         self.threshold = threshold
         self.SD_id = SD_id
+        self.name = name
         self.channel_id = channel_id
         self.pred = predictor
         self.alarm_time = 0
