@@ -66,18 +66,59 @@ class Environment(object):
     def arrange(self, arrange_method='center', fwd_space=0, aft_space=0):
         assert self.det_qty > 0, 'the qty of detector should be more than 1'
         if arrange_method == 'center':
-            X_group, Y_group = self.__center_arrange(
+            x_group, y_group = self.__center_arrange(
                 self.det_qty, fwd_space, aft_space, displace=100)  # 计算各组的坐标
             i = 0
             for sd in self.CHA_SD:
-                sd.set_pos(X_group[i], Y_group[0], self.bay_dim['height'])
+                sd.set_pos(x_group[i], y_group[0], self.bay_dim['height'])
                 i += 1
             i = 0
             for sd in self.CHB_SD:
-                sd.set_pos(X_group[i], Y_group[1], self.bay_dim['height'])
+                sd.set_pos(x_group[i], y_group[1], self.bay_dim['height'])
                 i += 1
+        if arrange_method == 'side':
+            x_group, y_group = self.__side_arrange(
+                self.det_qty, fwd_space, aft_space, displace=100)  # 计算各组的坐标
+            y = y_group[0]
+            for sd in self.detectors:
+                for x in x_group:
+                    sd.set_pos(x, y, self.bay_dim['height'])
+                    if y == y_group[0]:
+                        y = y_group[1]
+                    else:
+                        y = y_group[0]
 
-    def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):
+    def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):  # 中心排布方案
+        '''
+        SD_NUM: 烟雾探测器数量
+        fwd_space:第一个探测器与前壁板的距离
+        aft_space:最后一个探测器与后壁版距离
+        displace:烟雾探测器与中线的偏移
+        
+        '''
+        assert SD_NUM % 2 == 0, 'The qty of detector should be even'
+        group_NUM = int(SD_NUM/2)
+        x_group = list(range(group_NUM)) #沿航向的探测器坐标组
+        y_group = list(range(2)) #沿展向的探测器坐标组
+
+        # x_group.append(fwd_space + self.SD_dim[0]/2)
+        x_group[0] = fwd_space + self.SD_dim[0]/2
+        gap = (self.bay_dim['length'] - (fwd_space+aft_space)
+               - self.SD_dim[0]*group_NUM)/(group_NUM-1)
+        # x1 = x0 + gap + self.SD_dim[0]
+        first_sd_x = x_group[0]
+        for i in range(1, group_NUM-1):
+
+            x_group[i] = first_sd_x + gap + self.SD_dim[0]/2
+            first_sd_x = x_group[i]
+        x_group[-1] = (self.bay_dim['length'] - aft_space - self.SD_dim[0]/2)
+
+        y_group[0] = self.bay_dim['width']/2 + displace + self.SD_dim[1]/2
+        y_group[1] = self.bay_dim['width']/2 - displace - self.SD_dim[1]/2
+
+        return x_group, y_group
+
+    def __side_arrange(self, SD_NUM, fwd_space, aft_space, displace=50):  # 间隔排布方案
         '''
         SD_NUM: 烟雾探测器数量
         fwd_space:第一个探测器与前壁板的距离
@@ -85,26 +126,26 @@ class Environment(object):
         displace:烟雾探测器与中线的偏移
         '''
         assert SD_NUM % 2 == 0, 'The qty of detector should be even'
-        group_NUM = int(SD_NUM/2)
-        X_group = list(range(group_NUM))
-        Y_group = list(range(2))
+        # group_NUM = int(SD_NUM/2)
+        x_group = list(range(SD_NUM))
+        y_group = list(range(2))
 
-        # X_group.append(fwd_space + self.SD_dim[0]/2)
-        X_group[0] = fwd_space + self.SD_dim[0]/2
+        # x_group.append(fwd_space + self.SD_dim[0]/2)
+        x_group[0] = fwd_space + self.SD_dim[0]/2
         gap = (self.bay_dim['length'] - (fwd_space+aft_space)
-               - self.SD_dim[0]*group_NUM)/(group_NUM-1)
+               - self.SD_dim[0]*SD_NUM)/(SD_NUM-1)
         # x1 = x0 + gap + self.SD_dim[0]
-        tmp = X_group[0]
-        for i in range(1, group_NUM-1):
+        first_sd_x = x_group[0]
+        for i in range(1, SD_NUM-1):
 
-            X_group[i] = tmp + gap + self.SD_dim[0]/2
-            tmp = X_group[i]
-        X_group[-1] = (self.bay_dim['length'] - aft_space - self.SD_dim[0]/2)
+            x_group[i] = first_sd_x + gap + self.SD_dim[0]/2
+            first_sd_x = x_group[i]
+        x_group[-1] = (self.bay_dim['length'] - aft_space - self.SD_dim[0]/2)
 
-        Y_group[0] = self.bay_dim['width'] + displace + self.SD_dim[1]/2
-        Y_group[1] = self.bay_dim['width'] - displace - self.SD_dim[1]/2
+        y_group[0] = self.bay_dim['width']/2 + displace + self.SD_dim[1]/2
+        y_group[1] = self.bay_dim['width']/2 - displace - self.SD_dim[1]/2
 
-        return X_group, Y_group
+        return x_group, y_group
 
     def run(self, mode='singal'):
         if mode == 'singal':

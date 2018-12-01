@@ -50,7 +50,7 @@ def main():
                        detector_series=dets, detector_qty=SD_NUM)
     Env1.arrange(fwd_space=100, aft_space=100)
     Start_T = time()
-    # Env1.run(mode = 'all')
+    Env1.run(mode = 'all')
     End_T = time()
 
     print_results(Start_time=Start_T,End_time= End_T)
