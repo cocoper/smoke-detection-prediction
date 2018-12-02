@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class Environment(object):
-    def __init__(self, cargobay_obj, detector_series, detector_qty, time_criteria=60):
+    def __init__(self, cargobay_obj, detector_series, detector_qty,arrange, time_criteria=60):
         self.detectors = detector_series  # 创建探测器组
         # self.detectors =[]
         self.det_qty = detector_qty
@@ -15,6 +15,7 @@ class Environment(object):
         self.SD_dim = self.detectors[0].get_dimension()
         self.smoke_src_pos = (0, 0, 0)
         self.crit = time_criteria
+        self.sys_arrange = arrange
         self.log = {} #每次试验的记录
         dim = self.cargobay.get_dimension()
         self.bay_dim = {'width': dim[0],
@@ -35,6 +36,11 @@ class Environment(object):
 
         self.__set_detector_id()  # 顺序设置探测器Id
         self.__set_channel_id()  # 设置AB通道的探测器
+
+        self.arrange(arrange_method=self.sys_arrange['method'],
+                     fwd_space=self.sys_arrange['fwd space'],
+                     aft_space=self.sys_arrange['aft space'],
+                     displace=self.sys_arrange['displace'])
 
     def add_detector(self, detector):
         if detector.__class__.__name__ == "Detector":
@@ -63,11 +69,11 @@ class Environment(object):
                 sd.set_channel_id(1)
                 self.CHB_SD.append(sd)
 
-    def arrange(self, arrange_method='center', fwd_space=0, aft_space=0):
+    def arrange(self, arrange_method='center', fwd_space=0, aft_space=0, displace =100):
         assert self.det_qty > 0, 'the qty of detector should be more than 1'
         if arrange_method == 'center':
             x_group, y_group = self.__center_arrange(
-                self.det_qty, fwd_space, aft_space, displace=100)  # 计算各组的坐标
+                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
             i = 0
             for sd in self.CHA_SD:
                 sd.set_pos(x_group[i], y_group[0], self.bay_dim['height'])
@@ -78,7 +84,7 @@ class Environment(object):
                 i += 1
         if arrange_method == 'side':
             x_group, y_group = self.__side_arrange(
-                self.det_qty, fwd_space, aft_space, displace=100)  # 计算各组的坐标
+                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
             y = y_group[0]
             for sd in self.detectors:
                 for x in x_group:
