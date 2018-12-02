@@ -1,5 +1,0 @@
-POS,Postion
-CRI,Criterion
-regr, regressor
-sd, smoke detector
-NUM, number

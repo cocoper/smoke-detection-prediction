@@ -153,9 +153,15 @@ class SmokeDetectorSetDlg(wx.Dialog):
     def __init__(self, *args, **kw):
         super(SmokeDetectorSetDlg, self).__init__(*args, **kw)
 
+<<<<<<< HEAD
         self.sd_prop = {'Qty': 6,
                      'FAR': 0.01,
                      'Sen': 0.98,
+=======
+        self.sd_prop = {'Quantity': 6,
+                     'False Alarm Rate': 0.01,
+                     'Sensitivity': 0.98,
+>>>>>>> Console-0.1
                      'TBD': 0}
         self.InitUI()
         self.SetSize((300, 300))
