@@ -46,9 +46,6 @@ def print_results(summary, data_path='test_result.csv'):
             len(df_res[df_res.Alarm == False])))
         print(df_res.to_string())
 
-
-# TODO 通过文件读入全部的输入数据
-
 def main():
     # 输入cargobay几何数据
     # 输入SD几何数据
