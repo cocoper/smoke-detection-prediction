@@ -1,0 +1,16 @@
+{
+    "Type":"CR929-base",
+    "SD_num": 10,
+    "bay_dimension": [
+        4166,
+        16184,
+        1727.6
+    ],
+    "criteria": 60,
+    "arrange": {
+    	"method":"center",
+    	"fwd space":100,
+    	"aft space":100,
+    	"displace":100
+	}
+}
