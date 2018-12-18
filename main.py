@@ -4,6 +4,8 @@ import os
 import pickle
 import pandas as pd
 import json
+import SimpleGUI
+import wx
 from Detector import Detector
 from cargobay import CargoBay
 from Environment import Environment
@@ -90,4 +92,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    # app = SimpleGUI.WizardGUIApp()
+    app = wx.App()
+    wizGUI = SimpleGUI.WizardGUIApp()
+    app.MainLoop()
+    
+
