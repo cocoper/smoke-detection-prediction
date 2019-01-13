@@ -1,0 +1,16 @@
+{
+    "criteria": 60,
+    "Type":"CR929-base",
+    "SD_qty": 10,
+    "Sen":0.85,
+    "FAR":0.00001,
+    "SD_len":145,
+    "SD_width":140,
+    "bay_length":16184,
+    "bay_width":4166,
+    "bay_height":1727.6,
+    "method":"center",
+    "Gap1":100,
+    "Gap2":100,
+    "displace":100
+}

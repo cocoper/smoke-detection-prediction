@@ -1,19 +1,15 @@
 # -*- coding:utf-8  -*-
 
 import os
+import json
+from time import time
 import pickle
 import pandas as pd
-import json
 import SimpleGUI
 import wx
 from Detector import Detector
 from cargobay import CargoBay
 from Environment import Environment
-from time import time
-
-
-SD_NUM = 6
-TIME_CRI = 60  # in seconds
 
 
 def load_model(model_file):  # load model
@@ -22,7 +18,7 @@ def load_model(model_file):  # load model
     return predictor
 
 
-def load_inputs(inputs_file):
+def ReadInputs(inputs_file):
     with open(inputs_file, 'r', encoding='utf-8')as read_file:
         inputs = json.load(read_file)
 
@@ -48,42 +44,55 @@ def print_results(summary, data_path='test_result.csv'):
             len(df_res[df_res.Alarm == False])))
         print(df_res.to_string())
 
-def main():
+
+def RunMain():
     # 输入cargobay几何数据
     # 输入SD几何数据
     # 初始化仿真数据
 
-    inputs = load_inputs('inputs.json') #load inputs
-    AirType = inputs['Type']
-    SD_NUM = inputs['SD_num']
-    bay_dim = inputs['bay_dimension']
+    inputs = ReadInputs('inputs.json')  # load inputs
+    airplaneType = inputs['Type']
+    SD_qty = int(inputs['SD_qty'])
+    bay_width = inputs['bay_width']
+    bay_length = inputs['bay_length']
+    bay_height = inputs['bay_height']
     Time_Crit = inputs['criteria']
-    arrange = inputs['arrange']
+    arrange_method = inputs['method']
+    SD_len = inputs['SD_len']
+    SD_width = inputs['SD_width']
+    SD_FAR = inputs['FAR']
+    arrange = {
+        'method': inputs['method'],
+        'fwd_gap': inputs['Gap1'],
+        'aft_gap': inputs['Gap2'],
+        'displace': inputs['displace']
+    }
+    move_interval = {
+        'x_int':inputs['x_interval'],
+        'y_int':inputs['y_interval']
+    }
 
     predictor = load_model(os.getcwd()+'\\rf_model_all.model')
     FWD_cargobay = CargoBay(
-        width=bay_dim[0], length=bay_dim[1], height=bay_dim[0])
-    dets = [Detector(predictor, name='SD'+str(i+1)) for i in range(SD_NUM)]
+        width=bay_width, length=bay_length, height=bay_height)
+    dets = [Detector(predictor, (SD_width, SD_len), name='SD' +
+                     str(i+1), FalseAlarmRate=SD_FAR) for i in range(SD_qty)]
 
     Env1 = Environment(
         cargobay_obj=FWD_cargobay,
         detector_series=dets,
-        detector_qty=SD_NUM,
+        detector_qty=SD_qty,
         arrange=arrange,
-        time_criteria=Time_Crit
+        time_criteria=Time_Crit,
+        move_interval=move_interval
     )
-
-    # Env1.arrange(arrange_method=arrange['method'],
-    #              fwd_space=arrange['fwd space'],
-    #              aft_space=arrange['aft space']
-    #              )
 
     Start_T = time()
     Env1.run(mode='all')
     End_T = time()
 
     runs_summary = {
-        'Type': AirType,
+        'Type': airplaneType,
         'Date': 'tbd',
         'Time': End_T-Start_T
     }
@@ -93,9 +102,9 @@ def main():
 
 if __name__ == "__main__":
     # main()
-    # app = SimpleGUI.WizardGUIApp()
-    app = wx.App()
-    wizGUI = SimpleGUI.WizardGUIApp()
-    app.MainLoop()
-    
+    app = SimpleGUI.MyGUIApp(redirect=True,useBestVisual=True)
+    # app = wx.App(redirect=True)
+    # frm = SimpleGUI.MainFrame()
+    # frm.Show()
 
+    app.MainLoop()

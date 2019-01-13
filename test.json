@@ -1,0 +1,15 @@
+{
+    "bay_length": 1000.0,
+    "bay_width": 1000.0,
+    "bay_height": 1000.0,
+    "SD_qty": 10.0,
+    "Gap1": 100.0,
+    "Gap2": 100.0,
+    "displace": 100.0,
+    "Sen": 0.85,
+    "FAR": 1e-05,
+    "SD_len": 145,
+    "SD_width": 140,
+    "criteria": 60.0,
+    "Type": "cr929"
+}

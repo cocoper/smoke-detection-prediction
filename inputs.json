@@ -1,16 +1,1 @@
-{
-    "Type":"CR929-base",
-    "SD_num": 10,
-    "bay_dimension": [
-        4166,
-        16184,
-        1727.6
-    ],
-    "criteria": 60,
-    "arrange": {
-    	"method":"center",
-    	"fwd space":100,
-    	"aft space":100,
-    	"displace":100
-	}
-}
+{"bay_length": 12.0, "bay_width": 213.0, "bay_height": 21321.0, "method": "center", "SD_qty": 6.0, "Gap1": 100.0, "Gap2": 100.0, "displace": 100.0, "Sen": 0.85, "FAR": 1e-05, "SD_len": 145, "SD_width": 140, "criteria": 15.0, "Type": 123.0, "x_interval": 11.0, "y_interval": 11.0}

@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class Environment(object):
-    def __init__(self, cargobay_obj, detector_series, detector_qty,arrange, time_criteria=60):
+    def __init__(self, cargobay_obj, detector_series, detector_qty, arrange, time_criteria,move_interval):
         self.detectors = detector_series  # 创建探测器组
         # self.detectors =[]
         self.det_qty = detector_qty
@@ -14,9 +14,10 @@ class Environment(object):
         self.CHB_SD = []  # B通道组
         self.SD_dim = self.detectors[0].get_dimension()
         self.smoke_src_pos = (0, 0, 0)
+        self.move_interval = move_interval
         self.crit = time_criteria
         self.sys_arrange = arrange
-        self.log = {} #每次试验的记录
+        self.log = {}  # 每次试验的记录
         dim = self.cargobay.get_dimension()
         self.bay_dim = {'width': dim[0],
                         'length': dim[1],
@@ -38,8 +39,8 @@ class Environment(object):
         self.__set_channel_id()  # 设置AB通道的探测器
 
         self.arrange(arrange_method=self.sys_arrange['method'],
-                     fwd_space=self.sys_arrange['fwd space'],
-                     aft_space=self.sys_arrange['aft space'],
+                     fwd_gap=self.sys_arrange['fwd_gap'],
+                     aft_gap=self.sys_arrange['aft_gap'],
                      displace=self.sys_arrange['displace'])
 
     def add_detector(self, detector):
@@ -69,11 +70,11 @@ class Environment(object):
                 sd.set_channel_id(1)
                 self.CHB_SD.append(sd)
 
-    def arrange(self, arrange_method='center', fwd_space=0, aft_space=0, displace =100):
+    def arrange(self, arrange_method='center', fwd_gap=0, aft_gap=0, displace=100):
         assert self.det_qty > 0, 'the qty of detector should be more than 1'
         if arrange_method == 'center':
             x_group, y_group = self.__center_arrange(
-                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
+                self.det_qty, fwd_gap, aft_gap, displace=displace)  # 计算各组的坐标
             i = 0
             for sd in self.CHA_SD:
                 sd.set_pos(x_group[i], y_group[0], self.bay_dim['height'])
@@ -84,7 +85,7 @@ class Environment(object):
                 i += 1
         if arrange_method == 'side':
             x_group, y_group = self.__side_arrange(
-                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
+                self.det_qty, fwd_gap, aft_gap, displace=displace)  # 计算各组的坐标
             y = y_group[0]
             for sd in self.detectors:
                 for x in x_group:
@@ -94,22 +95,22 @@ class Environment(object):
                     else:
                         y = y_group[0]
 
-    def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):  # 中心排布方案
+    def __center_arrange(self, SD_NUM, fwd_gap, aft_gap, displace=0):  # 中心排布方案
         '''
         SD_NUM: 烟雾探测器数量
-        fwd_space:第一个探测器与前壁板的距离
-        aft_space:最后一个探测器与后壁版距离
+        fwd_gap:第一个探测器与前壁板的距离
+        aft_gap:最后一个探测器与后壁版距离
         displace:烟雾探测器与中线的偏移
-        
+
         '''
         assert SD_NUM % 2 == 0, 'The qty of detector should be even'
         group_NUM = int(SD_NUM/2)
-        x_group = list(range(group_NUM)) #沿航向的探测器坐标组
-        y_group = list(range(2)) #沿展向的探测器坐标组
+        x_group = list(range(group_NUM))  # 沿航向的探测器坐标组
+        y_group = list(range(2))  # 沿展向的探测器坐标组
 
-        # x_group.append(fwd_space + self.SD_dim[0]/2)
-        x_group[0] = fwd_space + self.SD_dim[0]/2
-        gap = (self.bay_dim['length'] - (fwd_space+aft_space)
+        # x_group.append(fwd_gap + self.SD_dim[0]/2)
+        x_group[0] = fwd_gap + self.SD_dim[0]/2
+        gap = (self.bay_dim['length'] - (fwd_gap+aft_gap)
                - self.SD_dim[0]*group_NUM)/(group_NUM-1)
         # x1 = x0 + gap + self.SD_dim[0]
         first_sd_x = x_group[0]
@@ -117,18 +118,18 @@ class Environment(object):
 
             x_group[i] = first_sd_x + gap + self.SD_dim[0]/2
             first_sd_x = x_group[i]
-        x_group[-1] = (self.bay_dim['length'] - aft_space - self.SD_dim[0]/2)
+        x_group[-1] = (self.bay_dim['length'] - aft_gap - self.SD_dim[0]/2)
 
         y_group[0] = self.bay_dim['width']/2 + displace + self.SD_dim[1]/2
         y_group[1] = self.bay_dim['width']/2 - displace - self.SD_dim[1]/2
 
         return x_group, y_group
 
-    def __side_arrange(self, SD_NUM, fwd_space, aft_space, displace=50):  # 间隔排布方案
+    def __side_arrange(self, SD_NUM, fwd_gap, aft_gap, displace=50):  # 间隔排布方案
         '''
         SD_NUM: 烟雾探测器数量
-        fwd_space:第一个探测器与前壁板的距离
-        aft_space:最后一个探测器与后壁版距离
+        fwd_gap:第一个探测器与前壁板的距离
+        aft_gap:最后一个探测器与后壁版距离
         displace:烟雾探测器与中线的偏移
         '''
         assert SD_NUM % 2 == 0, 'The qty of detector should be even'
@@ -136,9 +137,9 @@ class Environment(object):
         x_group = list(range(SD_NUM))
         y_group = list(range(2))
 
-        # x_group.append(fwd_space + self.SD_dim[0]/2)
-        x_group[0] = fwd_space + self.SD_dim[0]/2
-        gap = (self.bay_dim['length'] - (fwd_space+aft_space)
+        # x_group.append(fwd_gap + self.SD_dim[0]/2)
+        x_group[0] = fwd_gap + self.SD_dim[0]/2
+        gap = (self.bay_dim['length'] - (fwd_gap+aft_gap)
                - self.SD_dim[0]*SD_NUM)/(SD_NUM-1)
         # x1 = x0 + gap + self.SD_dim[0]
         first_sd_x = x_group[0]
@@ -146,7 +147,7 @@ class Environment(object):
 
             x_group[i] = first_sd_x + gap + self.SD_dim[0]/2
             first_sd_x = x_group[i]
-        x_group[-1] = (self.bay_dim['length'] - aft_space - self.SD_dim[0]/2)
+        x_group[-1] = (self.bay_dim['length'] - aft_gap - self.SD_dim[0]/2)
 
         y_group[0] = self.bay_dim['width']/2 + displace + self.SD_dim[1]/2
         y_group[1] = self.bay_dim['width']/2 - displace - self.SD_dim[1]/2
@@ -166,9 +167,10 @@ class Environment(object):
             rec_src_x = []  # 记录烟雾x位置
             rec_src_y = []  # 记录烟雾y位置
             test_num = 0  # 试验编号
-            g_src_pos = self.movesrc(1000, 1000, self.smoke_src_pos)
-            logfile = open('test_result.csv', 'w', newline ='', encoding='utf-8')
-            logger = csv.DictWriter(logfile,self.log.keys(),delimiter = ',')
+            g_src_pos = self.MoveSrc(self.move_interval, self.smoke_src_pos)
+            logfile = open('test_result.csv', 'w',
+                           newline='', encoding='utf-8')
+            logger = csv.DictWriter(logfile, self.log.keys(), delimiter=',')
             logger.writeheader()
             while True:
                 try:
@@ -193,7 +195,7 @@ class Environment(object):
                     print(self.log)
                     # self.write_test_log(test_res,logfile)
                     logger.writerow(self.log)
-                    
+
                 except StopIteration as e:
                     print(e.value)
                     break
@@ -218,8 +220,10 @@ class Environment(object):
             return (True in self.alarm2binary(self.crit, signal_CHA))\
                 | (True in self.alarm2binary(self.crit, signal_CHB))
 
-    def movesrc(self, step_x, step_y, initial_pos=(0, 0, 0)):
+    def MoveSrc(self, move_interval, initial_pos=(0, 0, 0)):
         index = 0
+        step_x = move_interval[0]
+        step_y = move_interval[1]
         assert step_x > 0, 'Step in length should be greater than zero'
         assert step_y > 0, 'Step in width should be greater than zero'
         src_x = initial_pos[0]
@@ -261,5 +265,3 @@ class Environment(object):
     #         test_res.keys()), delimiter=',')
     #     writer.writeheader()
     #     writer.writerow(test_res)
-
-
