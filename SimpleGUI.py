@@ -4,6 +4,7 @@ import os
 import json
 import wx
 import wx.adv
+import wx.lib.agw.advancedsplash as AS
 from main import RunMain
 from wx.adv import Wizard as wiz
 from wx.adv import WizardPageSimple
@@ -16,7 +17,15 @@ class MyGUIApp(wx.App):
     def OnInit(self):
         # self.frame = wx.Frame(parent=None, title="烟雾探测系统设计平台")
         self.frame = MainFrame()
-        # frm =
+        splashPath = image_path+"\\cargo_fire.png"
+        splashBitmap = wx.Bitmap(splashPath,wx.BITMAP_TYPE_ANY)
+        shadow =  wx.WHITE
+        splash = AS.AdvancedSplash(self.frame,bitmap=splashBitmap,timeout = 100,
+                                    agwStyle=AS.AS_TIMEOUT|
+                                   AS.AS_CENTER_ON_SCREEN |
+                                    AS.AS_SHADOW_BITMAP,
+                                    shadowcolour=shadow
+                                    )
         self.SetTopWindow(self.frame)
         self.frame.Show()
         return True
@@ -28,17 +37,23 @@ class MainFrame(wx.Frame):
                 id=-1, 
                 title="烟雾探测系统设计平台", 
                 pos=wx.DefaultPosition):
-        wx.Frame.__init__(self,parent,id,title)
+        wx.Frame.__init__(self, parent, id, title,
+                          size=(650, 1000), style=wx.DEFAULT_FRAME_STYLE)
         pnl = wx.Panel(self,-1)
-        bsizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbsizer = wx.BoxSizer(wx.VERTICAL)
         BtnPfrm = wx.Button(parent=pnl, label="系统性能分析")
         BtnOpt = wx.Button(parent=pnl, label="系统布置优化")
         BtnOpt.Enable(False)
         BtnExit = wx.Button(parent=pnl, label="系统退出")
+        LogWnd = wx.TextCtrl(parent=pnl,id=-1,value="",
+                            style=wx.TE_READONLY|
+                            wx.TE_MULTILINE,size=(600,800))
 
-        bsizer.AddMany([BtnPfrm,BtnOpt,BtnExit])
-
-        pnl.SetSizer(bsizer)
+        btnsizer.AddMany([BtnPfrm,BtnOpt,BtnExit])
+        hbsizer.Add(btnsizer)
+        hbsizer.Add(LogWnd)
+        pnl.SetSizer(hbsizer)
         pnl.SetBackgroundColour('white')
         self.Bind(wx.EVT_BUTTON, self.OnBtnPfrm, BtnPfrm)
         self.Bind(wx.EVT_BUTTON, self.OnBtnOpt, BtnOpt)
@@ -77,7 +92,11 @@ class WizardGUI():
     def __init__(self):
         self.model_path = os.getcwd()+'\\rf_model_all.model'
         self.SimParam = {}
-
+        self.logfrm = wx.Frame(parent=None, id=-1, title="log window",
+                               size=(650, 1000), style=wx.DEFAULT_FRAME_STYLE)
+        self.LogWnd = wx.TextCtrl(parent=self.logfrm, id=-1, value="",
+                             style=wx.TE_READONLY |
+                             wx.TE_MULTILINE, size=(600, 800))
         self.wizard = wiz(None, -1, 'Smoke detection prediction')
         self.page_title = ["设置货舱尺寸",
                            "设置探测器布置参数",
@@ -93,7 +112,6 @@ class WizardGUI():
             self.wizard, self.page_title[2], self.page_name[2])
         self.page4 = TitledPage(
             self.wizard, self.page_title[3], self.page_name[3])
-        # page1.sizer.Add(wx.StaticText(page1,-1,'Testing the wizard'))
 
         # Layout Page1
         self.page1.sizer.Add((0, 30))
@@ -106,12 +124,6 @@ class WizardGUI():
             wx.adv.EVT_WIZARD_PAGE_CHANGING, self.OnPageChange)
         self.page1.sizer.Add(wx.StaticLine(self.page1, -1),
                              0, wx.EXPAND | wx.ALL, 5)
-        # img1_1 = wx.Image(image_path+"bay_fig.bmp", wx.BITMAP_TYPE_ANY)
-        # img1_1_width = img1_1.GetWidth()
-        # img1_1_height = img1_1.GetHeight()
-        # sbp1_1 = wx.StaticBitmap(
-        #     self.page1, -1,
-        #     wx.Bitmap(img1_1.Scale(img2_1_width/ISF, img2_1_height/ISF)))
 
         img1_1 = self.ScaleBitmap(image_path+"bay_fig.bmp", 2)
         img_sb1_1 = wx.StaticBitmap(self.page1, -1, img1_1)
@@ -126,24 +138,13 @@ class WizardGUI():
         page2_label = ['探测器数量(个)', 'Gap1(mm)', 'Gap2(mm)', '偏移(mm)']
         page2_ctrlname = ['SD_qty', 'Gap1', 'Gap2', 'displace']
 
-        radio1 = wx.RadioButton(self.page2, -1, "居中布置", pos=(0, 30))
-        # img2_1 = wx.Image(image_path + "center.bmp", wx.BITMAP_TYPE_ANY)
-        # img2_1_width = img2_1.GetWidth()
-        # img2_1_height = img2_1.GetHeight()
-        # sbmp2_1 = wx.StaticBitmap(
-        #     self.page2, -1,
-        #     wx.Bitmap(img2_1.Scale(img2_1_width/ISF, img2_1_height/ISF)))
         img2_1 = self.ScaleBitmap(image_path+"center.jpg", 6)
+        radio1 = wx.RadioButton(self.page2, -1, "居中布置", pos=(0, 30))
         img_sb2_1 = wx.StaticBitmap(self.page2, -1, img2_1)
         self.page2.sizer.Add(radio1)
         self.page2.sizer.Add(img_sb2_1)
 
         radio2 = wx.RadioButton(self.page2, -1, "交错布置", pos=(0, 70))
-        # img2_2 = wx.Image(image_path + "side.bmp", wx.BITMAP_TYPE_ANY)
-        # sbmp2_2 = wx.StaticBitmap(self.page2, -1, wx.Bitmap(img2_2))
-        # sbmp2_2 = wx.StaticBitmap(
-        #     self.page2, -1,
-        #     wx.Bitmap(img2_1.Scale(img2_1_width/ISF, img2_1_height/ISF)))
         img2_2 = self.ScaleBitmap(image_path+"side.jpg", 6)
         img_sb2_2 = wx.StaticBitmap(self.page2, -1, img2_2)
         self.page2.sizer.Add(radio2)
@@ -192,6 +193,12 @@ class WizardGUI():
         WizardPageSimple.Chain(self.page1, self.page2)
         WizardPageSimple.Chain(self.page2, self.page3)
         WizardPageSimple.Chain(self.page3, self.page4)
+
+        self.logfrm.Show()
+    
+    def log(self,text):
+        self.LogWnd.AppendText(text+'\n')
+
 
     def InputBox(self, parent, labels, names):
         rows = len(labels)
@@ -267,6 +274,7 @@ class WizardGUI():
     def OnPageChange(self, evt):
         page = evt.GetPage()
         print(page.GetName())
+        self.log(page.GetName())
         HasBlankValue = False
         children = page.sizer.GetChildren()
         params = self.GetValueFromSizer(children)
@@ -337,9 +345,7 @@ class WizardGUI():
             self.CreateInputs(os.getcwd()+"\\inputs.json")
             return True
 
-#TODO: 创建一个splash界面
 #TODO: 单独创建每个页面的类
-# TODO: 创建一个开始的总页面，包括各个功能的按钮入口
 # TODO: 创建一个关于页面，声明版权
 # TODO: 添加一个确认输入的对话框
 # TODO: 创建一个Test summary页面，把在控制台中输出的信息放到这个页面中去，text ctrl, multi-line

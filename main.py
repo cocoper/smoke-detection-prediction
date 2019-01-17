@@ -11,6 +11,7 @@ from Detector import Detector
 from cargobay import CargoBay
 from Environment import Environment
 
+LOAD_DEF = True
 
 def load_model(model_file):  # load model
     with open(model_file, 'rb') as f:
@@ -50,7 +51,10 @@ def RunMain():
     # 输入SD几何数据
     # 初始化仿真数据
 
-    inputs = ReadInputs('inputs.json')  # load inputs
+    if LOAD_DEF:
+        inputs = ReadInputs('default.json')  # load inputs
+    else:
+        inputs = ReadInputs('inputs.json')
     airplaneType = inputs['Type']
     SD_qty = int(inputs['SD_qty'])
     bay_width = inputs['bay_width']
@@ -67,10 +71,7 @@ def RunMain():
         'aft_gap': inputs['Gap2'],
         'displace': inputs['displace']
     }
-    move_interval = {
-        'x_int':inputs['x_interval'],
-        'y_int':inputs['y_interval']
-    }
+    move_interval = [inputs['x_interval'],inputs['y_interval']]
 
     predictor = load_model(os.getcwd()+'\\rf_model_all.model')
     FWD_cargobay = CargoBay(
@@ -102,9 +103,6 @@ def RunMain():
 
 if __name__ == "__main__":
     # main()
-    app = SimpleGUI.MyGUIApp(redirect=True,useBestVisual=True)
-    # app = wx.App(redirect=True)
-    # frm = SimpleGUI.MainFrame()
-    # frm.Show()
+    app = SimpleGUI.MyGUIApp(redirect=False,useBestVisual=True)
 
     app.MainLoop()

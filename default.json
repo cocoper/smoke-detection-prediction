@@ -12,5 +12,7 @@
     "method":"center",
     "Gap1":100,
     "Gap2":100,
-    "displace":100
+    "displace":100,
+    "x_interval":1000,
+    "y_interval":1000
 }
