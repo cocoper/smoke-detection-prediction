@@ -7,6 +7,7 @@ import pickle
 import pandas as pd
 import SimpleGUI
 import wx
+import myAUI
 from Detector import Detector
 from cargobay import CargoBay
 from Environment import Environment
@@ -103,6 +104,10 @@ def RunMain():
 
 if __name__ == "__main__":
     # main()
-    app = SimpleGUI.MyGUIApp(redirect=False,useBestVisual=True)
+    # app = SimpleGUI.MyGUIApp(redirect=False,useBestVisual=True)
+    app = wx.App()
 
+    AUIfrm = myAUI.MainAUI(None)
+    app.SetTopWindow(AUIfrm)
+    AUIfrm.Show()
     app.MainLoop()
