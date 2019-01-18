@@ -4,6 +4,8 @@ import os
 import wx
 import wx.lib.agw.aui as aui
 
+image_path = os.getcwd()+"\\src\\Images\\"
+
 
 class MainAUI(wx.Frame):
     def __init__(self, parent, id=-1, title="Smoke Detection System Simulator",
@@ -62,13 +64,68 @@ class MainAUI(wx.Frame):
         self._mgr.AddPane(text3, paneinfo3)
 
         self._mgr.Update()
+        
+        # create menu
+        menubar =wx.MenuBar()
+        self.SetMenuBar(menubar)
 
+
+        file_menu = wx.Menu()
+        menuOpen = file_menu.Append(wx.ID_OPEN, "&Open", "打开数据文件")
+        menuExit = file_menu.Append(wx.ID_EXIT, "E&xit", "退出")
+        menubar.Append(file_menu, "文件")
+        self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
+
+        model_menu = wx.Menu()
+        menuload = model_menu.Append(wx.ID_ANY, "读取模型", "读取预测模型")
+        menuEnv = model_menu.Append(wx.ID_ANY, "设置环境参数", "设置预测模型的环境参数")
+        menuSD = model_menu.Append(wx.ID_ANY, "设置烟雾探测器", "设置烟雾探测器")
+        menubar.Append(model_menu, "创建模型")
+        # self.Bind(wx.EVT_MENU, self.OnSetSmokeDetector, menuSD)
+
+        run_menu = wx.Menu()
+        menurun = run_menu.Append(wx.ID_ANY, "运行", "开始模拟")
+        # self.Bind(wx.EVT_MENU, self.OnRun, menurun)
+
+        about_menu = wx.Menu()
+        menuabt = about_menu.Append(wx.ID_ABOUT, "关于", "关于本软件的信息")
+        menubar.Append(about_menu, "关于")
+        self.Bind(wx.EVT_MENU, self.OnAbout, menuabt)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def OnClose(self, evt):
         self._mgr.UnInit()
         evt.Skip()
 
+    def OnExit(self, e):
+        self.Close(True)
+
+    def OnAbout(self, e):
+        description = """ This is a generic aircraft smoke detection system simulator
+        by machine learning
+
+        Under developing
+
+        """
+
+        licence = """
+        TBD
+        """
+        icon_path = os.path.join(image_path, 'icon_about.png')
+
+        info = wx.adv.AboutDialogInfo()
+
+        info.SetIcon(wx.Icon(icon_path, wx.BITMAP_TYPE_PNG))
+        info.SetName('Smoke Detection System Simulator')
+        info.SetVersion('0.1')
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2018 Xuan Yang. All rights reserved')
+        info.SetWebSite('')
+        info.SetLicence(licence)
+        info.AddDeveloper('Xuan Yang')
+        info.AddDocWriter('Xuan Yang')
+
+        wx.adv.AboutBox(info)
 
 class TreeCtrlPanel(wx.Panel):
     def __init__(self, parent, size=wx.DefaultSize):
@@ -83,7 +140,7 @@ class TreeCtrlPanel(wx.Panel):
         for x in range(10):
             child = self.tree.AppendItem(
                 self.root, "smoke detector {}".format(str(x)))
-            self.tree.SetItemData(child, None)
+            # self.tree.SetItemData(child, None)
 
         self.tree.Expand(self.root)
 
