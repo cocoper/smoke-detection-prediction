@@ -68,7 +68,7 @@ class Detector(object):
 
     def __cal_distance(self,pos1,pos2):
         
-        dis = (pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2
+        dis = (pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2
         return math.sqrt(dis)
         
 class Groups(object):
