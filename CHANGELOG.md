@@ -29,3 +29,13 @@
 - 高分屏 DPI 自适应
 - 货舱布局可视化（显示探测器位置）
 - 减少弹窗提示
+
+## [v3.x] 2026-04-06
+
+### 🎨 UI 修复
+- **字体替换**：所有 `Microsoft YaHei` / `SimHei` 替换为系统内置 `Noto Sans CJK SC`，解决 WSL/Linux 环境下中文显示为方块的问题
+- **matplotlib 中文**：图表字体同步替换为 `Noto Sans CJK SC`，解决坐标轴/标题中文乱码
+
+### 🖥️ 高分屏适配
+- 新增 `QT_SCALE_FACTOR=2` 强制 2x 缩放（WSLg 环境）
+- 新增 `QT_SCALE_FACTOR_ROUNDING_POLICY=Passthrough` 避免缩放取整模糊

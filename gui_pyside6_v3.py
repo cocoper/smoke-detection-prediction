@@ -139,7 +139,7 @@ class CargoBayWidget(QWidget):
         if not self.detectors:
             p = QPainter(self)
             p.setPen(QPen(QColor(136, 136, 136)))
-            p.setFont(QFont("Microsoft YaHei", 16))
+            p.setFont(QFont("Noto Sans CJK SC", 16))
             p.drawText(self.rect(), Qt.AlignCenter, "加载配置后\n显示货舱布局")
             p.end()
             return
@@ -158,7 +158,7 @@ class CargoBayWidget(QWidget):
 
         # 标题
         p.setPen(QPen(Qt.white))
-        p.setFont(QFont("Microsoft YaHei", 11, QFont.Bold))
+        p.setFont(QFont("Noto Sans CJK SC", 11, QFont.Bold))
         p.drawText(int(w/2-120), 28, f"货舱 {self.bay_length} x {self.bay_width} mm | {len(self.detectors)} 个探测器")
 
         # 货舱背景
@@ -172,7 +172,7 @@ class CargoBayWidget(QWidget):
             gx = int(ox + g * s)
             p.drawLine(gx, int(oy), gx, int(oy + bh))
         p.setPen(QPen(QColor(90, 100, 110)))
-        p.setFont(QFont("Microsoft YaHei", 8))
+        p.setFont(QFont("Noto Sans CJK SC", 8))
         for g in range(0, int(self.bay_length)+1, 2000):
             gx = int(ox + g * s)
             p.drawText(gx - 10, int(oy + bh + 16), str(g))
@@ -199,7 +199,7 @@ class CargoBayWidget(QWidget):
             p.setBrush(QBrush(c))
             p.drawEllipse(int(dx-5), int(dy-5), 10, 10)
             # 标签（缩小字号，去掉背景框）
-            p.setFont(QFont("Microsoft YaHei", 8, QFont.Bold))
+            p.setFont(QFont("Noto Sans CJK SC", 8, QFont.Bold))
             fm = p.fontMetrics()
             tw = fm.horizontalAdvance(label)
             th = fm.height()
@@ -217,7 +217,7 @@ class CargoBayWidget(QWidget):
         p.setBrush(QBrush(QColor(16, 185, 80)))
         p.drawEllipse(lx+8, ly+6, 8, 8)
         p.setPen(QPen(QColor(200,200,200)))
-        p.setFont(QFont("Microsoft YaHei", 9))
+        p.setFont(QFont("Noto Sans CJK SC", 9))
         p.drawText(lx+20, ly+14, "A 通道")
         p.setPen(Qt.NoPen)
         p.setBrush(QBrush(QColor(59, 165, 255)))
@@ -344,7 +344,7 @@ class MainWindow(QMainWindow):
         # 全局字体 - 14pt 基础
         font = QFont()
         font.setPointSize(14)
-        font.setFamily("Microsoft YaHei")
+        font.setFamily("Noto Sans CJK SC")
         QApplication.setFont(font)
 
         # 全局样式表 - 统一增大字体
@@ -948,8 +948,8 @@ class MainWindow(QMainWindow):
             from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
             from PySide6.QtWidgets import QDialog, QVBoxLayout as DQVBoxLayout
             
-            # 配置中文字体
-            plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+            # 配置中文字体（使用系统已安装的 Noto Sans CJK）
+            plt.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'Noto Sans CJK JP', 'DejaVu Sans']
             plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
             alarm_data = self.sim_results[self.sim_results['Alarm'] == True]
@@ -998,6 +998,9 @@ class MainWindow(QMainWindow):
 def main():
     os.environ.setdefault("QT_ENABLE_HIGHDPI_SCALING", "1")
     os.environ.setdefault("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
+    # 高分屏强制 2x 缩放（WSLg 环境）
+    os.environ.setdefault("QT_SCALE_FACTOR", "2")
+    os.environ.setdefault("QT_SCALE_FACTOR_ROUNDING_POLICY", "Passthrough")
 
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
