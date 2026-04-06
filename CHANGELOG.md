@@ -1,5 +1,20 @@
 # 更新日志 (Changelog)
 
+## [v4.0] - 2026-04-06
+
+### 全新界面风格
+- Windows 传统 C++ 软件风格重设计
+- 顶部工具栏（几何图标，无 emoji）
+- Tab 页导航（Simulation / Results / Settings / Help）
+- 底部状态栏
+- Segoe UI 字体，深色主题
+
+### 新增
+- 新增 gui_pyside6_winstyle.py（独立文件，ui-redesign 分支）
+- 新增正式开发文档 docs/development-documentation.md（SDSS-SW-001）
+
+---
+
 ## [v3.1] - 2026-04-06
 
 ### 修复

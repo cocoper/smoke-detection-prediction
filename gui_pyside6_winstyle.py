@@ -1,4 +1,12 @@
 # -*- coding:utf-8 -*-
+import os, sys
+os.environ.setdefault('DISPLAY', ':0')  # WSLg display
+# os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')  # DEBUG: disabled
+os.environ.setdefault('QT_SCALE_FACTOR', '2')
+os.environ.setdefault('QT_ENABLE_HIGHDPI_SCALING', '1')
+os.environ.setdefault('QT_AUTO_SCREEN_SCALE_FACTOR', '1')
+os.environ.setdefault('QT_SCALE_FACTOR_ROUNDING_POLICY', 'Passthrough')
+
 """
 飞机货舱烟雾检测仿真系统 - Windows 传统风格界面 (PySide6)
 风格参考：传统 C++ Windows 软件风格
@@ -294,7 +302,7 @@ class MainWindow(QMainWindow):
         self._init_ui()
 
     def _init_ui(self):
-        self.setWindowTitle("Smoke Detection Simulation System  v3.1")
+        self.setWindowTitle("Smoke Detection Simulation System  v4.0")
         self.setMinimumSize(1100, 700)
         self.resize(1380, 880)
         self._apply_theme()
@@ -636,7 +644,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(lbl)
 
         help_text = """================================================================
-        Smoke Detection Simulation System  -  User Guide  v3.1
+        Smoke Detection Simulation System  -  User Guide  v4.0
 ================================================================
 
 [ Getting Started ]
@@ -663,7 +671,7 @@ class MainWindow(QMainWindow):
 
         about_g = QGroupBox("About")
         about_l = QVBoxLayout()
-        about_l.addWidget(QLabel("Smoke Detection Simulation System  v3.1"))
+        about_l.addWidget(QLabel("Smoke Detection Simulation System  v4.0"))
         about_l.addWidget(QLabel("Machine learning based smoke detector response prediction"))
         about_l.addWidget(QLabel("2026 Xuan Yang"))
         about_g.setLayout(about_l)
