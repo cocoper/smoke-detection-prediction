@@ -16,7 +16,9 @@ class Environment(object):
         self.smoke_src_pos = (0, 0, 0)
         self.crit = time_criteria
         self.sys_arrange = arrange
-        self.log = {} #每次试验的记录
+        self.log = {}
+        self._progress_callback = None
+        self._stop_flag = None  # 外部设置，用于中断仿真
         dim = self.cargobay.get_dimension()
         self.bay_dim = {'width': dim[0],
                         'length': dim[1],
@@ -73,7 +75,7 @@ class Environment(object):
         assert self.det_qty > 0, 'the qty of detector should be more than 1'
         if arrange_method == 'center':
             x_group, y_group = self.__center_arrange(
-                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
+                self.det_qty, fwd_space, aft_space, displace=displace)
             i = 0
             for sd in self.CHA_SD:
                 sd.set_pos(x_group[i], y_group[0], self.bay_dim['height'])
@@ -84,15 +86,14 @@ class Environment(object):
                 i += 1
         if arrange_method == 'side':
             x_group, y_group = self.__side_arrange(
-                self.det_qty, fwd_space, aft_space, displace=displace)  # 计算各组的坐标
-            y = y_group[0]
-            for sd in self.detectors:
-                for x in x_group:
-                    sd.set_pos(x, y, self.bay_dim['height'])
-                    if y == y_group[0]:
-                        y = y_group[1]
-                    else:
-                        y = y_group[0]
+                self.det_qty, fwd_space, aft_space, displace=displace)
+            i = 0
+            for sd in self.CHA_SD:
+                sd.set_pos(x_group[i], y_group[0], self.bay_dim['height'])
+                i += 1
+            for sd in self.CHB_SD:
+                sd.set_pos(x_group[i], y_group[1], self.bay_dim['height'])
+                i += 1
 
     def __center_arrange(self, SD_NUM, fwd_space, aft_space, displace=0):  # 中心排布方案
         '''
@@ -159,18 +160,20 @@ class Environment(object):
                 sd.alarm(self.smoke_src_pos)
             return self.det_logic(self.CHA_SD, self.CHB_SD, mode='AND')
 
-            # self.output(mode)
-
         if mode == 'all':
-            failed_test = []  # 记录失败试验的编号
-            rec_src_x = []  # 记录烟雾x位置
-            rec_src_y = []  # 记录烟雾y位置
-            test_num = 0  # 试验编号
+            failed_test = []
+            rec_src_x = []
+            rec_src_y = []
+            test_num = 0
             g_src_pos = self.movesrc(1000, 1000, self.smoke_src_pos)
             logfile = open('test_result.csv', 'w', newline ='', encoding='utf-8')
             logger = csv.DictWriter(logfile,self.log.keys(),delimiter = ',')
             logger.writeheader()
             while True:
+                # 检查停止标志
+                if self._stop_flag and self._stop_flag():
+                    print('仿真已被用户中断')
+                    break
                 try:
                     test_num += 1
                     self.log['No.'] = test_num
@@ -182,7 +185,7 @@ class Environment(object):
                         src_x, src_y, self.smoke_src_pos[2])
 
                     for sd in self.detectors:
-                        sd.alarm(self.smoke_src_pos)  # 得到每个烟雾探测器的告警时间并存入对象内
+                        sd.alarm(self.smoke_src_pos)
                         self.log[sd.name] = sd.alarm_time[0]
                     self.output()
                     alarm_res = self.det_logic(
@@ -191,11 +194,17 @@ class Environment(object):
                     if not alarm_res:
                         failed_test.append(test_num)
                     print(self.log)
-                    # self.write_test_log(test_res,logfile)
                     logger.writerow(self.log)
                     
+                    # 进度回调
+                    if self._progress_callback:
+                        self._progress_callback(test_num, 0, f'测试 #{test_num}')
+                        
                 except StopIteration as e:
                     print(e.value)
+                    # 最终进度
+                    if self._progress_callback:
+                        self._progress_callback(test_num, test_num, '全部完成')
                     break
             logfile.close()
             print(failed_test)
