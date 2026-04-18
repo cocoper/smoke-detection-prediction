@@ -85,6 +85,11 @@ class SimulationConfig:
     # 内部使用，不暴露给 JSON 序列化
     _src_step_x_mm: int = field(default=1000, repr=False)   # movesrc 步长 X
     _src_step_y_mm: int = field(default=1000, repr=False)   # movesrc 步长 Y
+    # 探测器尺寸（UI 专用，不写入 JSON）
+    sd_length_mm: float = field(default=140.0, repr=False)
+    sd_width_mm:  float = field(default=145.0, repr=False)
+    # 自定义探测器布局（手动布放后由 GUI 注入，不参与 JSON 序列化）
+    _custom_detectors: list = field(default_factory=list, repr=False)
 
     # ------------------------------------------------------------------
     # 工厂方法
@@ -93,6 +98,7 @@ class SimulationConfig:
     def from_dict(cls, d: dict) -> "SimulationConfig":
         """从裸字典构造（用于解析 inputs.json）"""
         bay = d.get("bay_dimension", [])
+        arr = d.get("arrange", {})
         return cls(
             type_     = str(d.get("Type", "")),
             sd_num    = int(d["SD_num"]),
@@ -103,11 +109,13 @@ class SimulationConfig:
             ),
             criteria_s = int(d["criteria"]),
             arrange   = ArrangeConfig(
-                method      = str(d["arrange"].get("method", "center")),
-                fwd_mm      = int(d["arrange"].get("fwd space", 0)),
-                aft_mm      = int(d["arrange"].get("aft space", 0)),
-                displace_mm = int(d["arrange"].get("displace", 100)),
+                method      = str(arr.get("method", "center")),
+                fwd_mm      = int(arr.get("fwd space", 0)),
+                aft_mm      = int(arr.get("aft space", 0)),
+                displace_mm = int(arr.get("displace", 100)),
             ),
+            sd_length_mm = float(arr.get("sd_length_mm", 140.0)),
+            sd_width_mm  = float(arr.get("sd_width_mm", 145.0)),
         )
 
     @classmethod
@@ -157,10 +165,12 @@ class SimulationConfig:
             ],
             "criteria":   self.criteria_s,
             "arrange": {
-                "method":   self.arrange.method,
-                "fwd space":  self.arrange.fwd_mm,
-                "aft space":  self.arrange.aft_mm,
-                "displace":   self.arrange.displace_mm,
+                "method":       self.arrange.method,
+                "fwd space":    self.arrange.fwd_mm,
+                "aft space":    self.arrange.aft_mm,
+                "displace":     self.arrange.displace_mm,
+                "sd_length_mm": self.sd_length_mm,
+                "sd_width_mm":  self.sd_width_mm,
             },
         }
 

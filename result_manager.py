@@ -94,7 +94,7 @@ class ResultManager:
         self._timestamp = datetime.now().strftime(self.timestamp_fmt)
         filename = self.filename_fmt.format(timestamp=self._timestamp)
         self._current_file = self.output_dir / filename
-        self._output_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # 元信息
         self._meta = dict(metadata or {})

@@ -143,10 +143,28 @@ class SimulationEngine:
         )
 
         # 构建探测器阵列
-        self.detectors = [
-            Detector(predictor=predictor, name=f"SD{i+1}")
-            for i in range(config.sd_num)
-        ]
+        custom_dets = getattr(config, '_custom_detectors', None)
+        if custom_dets:
+            # GUI 手动布放的探测器：直接用已有的 x/y 坐标
+            self.detectors = []
+            for i, (x, y, name, ch) in enumerate(custom_dets):
+                det = Detector(
+                    predictor=predictor,
+                    name=name,
+                    x_pos=x, y_pos=y,
+                    channel_id=0 if ch == 0 else 1,
+                )
+                self.detectors.append(det)
+            # 同步 sd_num
+            self.cfg.sd_num = len(custom_dets)
+            # _apply_arrangement 也会覆盖坐标，所以这里重新设置回去
+            for (x, y, name, ch), det in zip(custom_dets, self.detectors):
+                det.set_pos(x, y, self.cargobay.height_mm)
+        else:
+            self.detectors = [
+                Detector(predictor=predictor, name=f"SD{i+1}")
+                for i in range(config.sd_num)
+            ]
 
         # 通道分组
         self.CHA_SD: list[Detector] = []   # Channel-A (odd id)
@@ -182,6 +200,18 @@ class SimulationEngine:
         """
         cbs = callbacks or GridScanCallbacks()
         results: list[SingleSimulationResult] = []
+
+        # 启动结果记录
+        if self.rm is not None:
+            self.rm.start_run(
+                metadata={
+                    "sd_num":    self.cfg.sd_num,
+                    "bay":       f"{self.cfg.bay.length_mm}x{self.cfg.bay.width_mm}x{self.cfg.bay.height_mm}",
+                    "criteria_s": self.cfg.criteria_s,
+                    "method":    self.cfg.arrange.method,
+                }
+            )
+
         test_no  = 0
         total    = self.cfg.grid_points   # 准确的网格总数
 
@@ -379,14 +409,15 @@ class SimulationEngine:
 
         X 方向外循环，Y 方向内循环。
         每个方向步长为 STEP_X_MM / STEP_Y_MM。
+        端点（length_mm, width_mm）会被包含在网格中。
         """
         src_x = 0.0
-        while src_x <= self.cargobay.length_mm:
+        while src_x <= self.cargobay.length_mm + 1e-6:
             src_y = 0.0
-            while src_y <= self.cargobay.width_mm:
+            while src_y <= self.cargobay.width_mm + 1e-6:
                 yield src_x, src_y
-                src_y = min(src_y + self.STEP_Y_MM, self.cargobay.width_mm)
-            src_x = min(src_x + self.STEP_X_MM, self.cargobay.length_mm)
+                src_y += self.STEP_Y_MM
+            src_x += self.STEP_X_MM
 
     def __repr__(self):
         return (f"<SimulationEngine sd_num={self.cfg.sd_num} "
